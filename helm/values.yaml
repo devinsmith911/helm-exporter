@@ -2,6 +2,8 @@
 namespaces: ""
 # you can specify namespaces to ignore - comma separated list of regexps
 namespacesIgnore: ""
+# you can specify names of charts to ignore - comma separated list of regexps
+chartsIgnore: ""
 infoMetric: true
 timestampMetric: true
 latestChartVersion: true

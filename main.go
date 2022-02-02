@@ -73,6 +73,9 @@ var (
 		"pending-rollback": 8,
 	}
 
+	chartsIgnore   = flag.String("charts-ignore", "", "charts to ignore.  Defaults to none")
+    chartsIgnoreRe []regexp.Regexp
+
 	prometheusHandler = promhttp.Handler()
 )
 
@@ -154,9 +157,18 @@ func runStats(config config.Config, info *prometheus.GaugeVec, timestamp *promet
 			description := item.Info.Description
 			latestVersion := ""
 
-			if *fetchLatest {
-				latestVersion = config.HelmRegistries.GetLatestVersionFromHelm(item.Chart.Name())
+		checkChart := true
+		for _, re := range chartsIgnoreRe {
+			if re.FindString(chart) != "" {
+				checkChart = false
+				log.Infof("Chart %s is in ignore list", chart)
 			}
+		}
+		
+		if *fetchLatest && checkChart == true {
+			log.Infof("Checking version, latest and check chart are true")
+			latestVersion = config.HelmRegistries.GetLatestVersionFromHelm(item.Chart.Name())
+		}
 
 			lv, err := semver.NewVersion(latestVersion)
 			if err == nil {
@@ -308,6 +320,15 @@ func main() {
 			log.Infof("Regexp error : %s", err)
 		} else {
 			namespacesIgnoreRe = append(namespacesIgnoreRe, *re)
+		}
+	}
+
+	for _, listItem := range strings.Split(*chartsIgnore, ",") {
+		re, err := regexp.Compile(listItem)
+		if err != nil {
+			log.Infof("Regexp error : %s", err)
+		} else {
+			chartsIgnoreRe = append(chartsIgnoreRe, *re)
 		}
 	}
 

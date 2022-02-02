@@ -54,6 +54,10 @@ spec:
             - "-namespaces-ignore"
             - {{ .Values.namespacesIgnore | quote }}
             {{- end }}
+            {{- if .Values.chartsIgnore }}
+            - "-charts-ignore"
+            - {{ .Values.chartsIgnore | quote }}
+            {{- end }}
             {{- if not .Values.infoMetric }}
             - "-info-metric=false"
             {{- end }}
