@@ -49,6 +49,8 @@ var (
 	namespaces         = flag.String("namespaces", "", "namespaces to monitor.  Defaults to all")
 	namespacesIgnore   = flag.String("namespaces-ignore", "", "namespaces to ignore.  Defaults to none")
 	namespacesIgnoreRe []regexp.Regexp
+	chartsIgnore       = flag.String("charts-ignore", "", "charts to ignore from version check.  Defaults to none")
+	chartsIgnoreRe     []regexp.Regexp
 	configFile         = flag.String("config", "", "Configfile to load for helm overwrite registries.  Default is empty")
 
 	intervalDuration = flag.String("interval-duration", "0", "Enable metrics gathering in background, each given duration. If not provided, the helm stats are computed synchronously.  Default is 0")
@@ -72,9 +74,6 @@ var (
 		"pending-upgrade":  7,
 		"pending-rollback": 8,
 	}
-
-	chartsIgnore   = flag.String("charts-ignore", "", "charts to ignore.  Defaults to none")
-    chartsIgnoreRe []regexp.Regexp
 
 	prometheusHandler = promhttp.Handler()
 )
@@ -157,18 +156,17 @@ func runStats(config config.Config, info *prometheus.GaugeVec, timestamp *promet
 			description := item.Info.Description
 			latestVersion := ""
 
-		checkChart := true
-		for _, re := range chartsIgnoreRe {
-			if re.FindString(chart) != "" {
-				checkChart = false
-				log.Infof("Chart %s is in ignore list", chart)
+			checkChart := true
+			for _, re := range chartsIgnoreRe {
+				if re.FindString(chart) != "" {
+					checkChart = false
+					log.Infof("Chart %s is in version check ignore list", chart)
+				}
 			}
-		}
-		
-		if *fetchLatest && checkChart == true {
-			log.Infof("Checking version, latest and check chart are true")
-			latestVersion = config.HelmRegistries.GetLatestVersionFromHelm(item.Chart.Name())
-		}
+
+			if *fetchLatest && checkChart == true {
+				latestVersion = config.HelmRegistries.GetLatestVersionFromHelm(item.Chart.Name())
+			}
 
 			lv, err := semver.NewVersion(latestVersion)
 			if err == nil {
