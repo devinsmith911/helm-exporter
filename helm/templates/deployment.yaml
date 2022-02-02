@@ -54,9 +54,8 @@ spec:
             - "-namespaces-ignore"
             - {{ .Values.namespacesIgnore | quote }}
             {{- end }}
-            {{- if .Values.chartsIgnore }}
-            - "-charts-ignore"
-            - {{ .Values.chartsIgnore | quote }}
+            {{- with .Values.chartsIgnore }}
+            - "--charts-ignore={{ . }}"
             {{- end }}
             {{- if not .Values.infoMetric }}
             - "-info-metric=false"
